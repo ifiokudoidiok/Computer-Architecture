@@ -2,6 +2,13 @@
 
 import sys
 
+LDI = 0b10000010
+PRN = 0b01000111
+HLT = 0b00000001
+MUL = 0b10100010
+PUSH = 0b01000101 
+POP = 0b01000110 
+
 class CPU:
     """Main CPU class."""
 
@@ -13,29 +20,19 @@ class CPU:
         self.ir = None
         self.ram = [0] * 256
         self.can_run = False
+        self.branchtable = {
+            LDI: self.ldi,
+            PRN: self.prn,
+            HLT: self.hlt,
+            MUL: self.mul,
+            PUSH: self.push,
+            POP: self.pop,
+        }
         
 
     def load(self, program_file):
         """Load a program into memory."""
 
-        # address = 0
-        # self.can_run = True
-
-        # # For now, we've just hardcoded a program:
-
-        # program = [
-        #     # From print8.ls8
-        #     0b10000010, # LDI R0,8
-        #     0b00000000,
-        #     0b00001000,
-        #     0b01000111, # PRN R0
-        #     0b00000000,
-        #     0b00000001, # HLT
-        # ]
-
-        # for instruction in program:
-        #     self.ram[address] = instruction
-        #     address += 1
         try:
             address = 0
             self.can_run = True
@@ -89,6 +86,32 @@ class CPU:
     def ram_write(self,address, value):
         self.ram[address] = value
         return self.ram[address]
+
+    def prn(self):
+        key = int(self.ram_read(self.pc+1))
+        print(int(self.reg[key]))
+
+    def hlt(self):
+        self.can_run = False
+        exit()
+
+    def mul(self):
+        self.alu('MUL', self.ram_read(self.pc+1), self.ram_read(self.pc+2))
+    
+    def ldi(self):
+        key = int(self.ram_read(self.pc+1))
+        value = self.ram_read(self.pc+2)
+        self.reg[key] = value
+    
+    def push(self, register):
+        key = int(self.ram_read(self.pc+1))
+        self.reg[7] -=1
+        self.ram_write(self.reg[7], key)
+        
+
+    def pop(self, register):
+        pass
+
         
         
 
@@ -100,31 +123,34 @@ class CPU:
             ram_read_ins = self.ram_read(self.pc)
             # result = self.ram_write(self.ir, ram_read_ins)
             self.ir = ram_read_ins
-            if ram_read_ins == 0b00000001:
-                self.can_run = False
-                exit()
+            # if ram_read_ins == 0b00000001:
+            #     self.can_run = False
+            #     exit()
             format_ram_read_ins = '{0:8b}'.format(ram_read_ins)
             num_op = int(format_ram_read_ins[:2].strip() or '00',2)
             alu_op = int(format_ram_read_ins[2].strip() or '0',2)
             inst_set = int(format_ram_read_ins[3].strip() or '0',2)
             inst_iden = int(format_ram_read_ins[4:].strip() or '0000',2)
 
-            if alu_op == int('1', 2):
-                self.alu('MUL', self.ram_read(self.pc+1), self.ram_read(self.pc+2))
+            self.branchtable[self.ir]()
+            if inst_set == 0:
+                self.pc += num_op + 1
 
-
-                # print(output)
-                self.pc += int(num_op) + 1
-            else:
-                if ram_read_ins == 0b10000010:
-                    key = int(self.ram_read(self.pc+1))
-                    value = self.ram_read(self.pc+2)
-                    self.reg[key] = value
-                    self.pc += int(num_op) + 1
-                elif ram_read_ins == 0b01000111:
-                    key = int(self.ram_read(self.pc+1))
-                    print(int(self.reg[key]))
-                    self.pc += int(num_op) + 1
+            # if alu_op == int('1', 2):
+            #     self.alu('MUL', self.ram_read(self.pc+1), self.ram_read(self.pc+2))
+            #     # print(output)
+            #     self.pc += int(num_op) + 1
+            # else:
+            #     if ram_read_ins == 0b10000010:
+            #         key = int(self.ram_read(self.pc+1))
+            #         value = self.ram_read(self.pc+2)
+            #         self.reg[key] = value
+            #         self.pc += int(num_op) + 1
+            #     elif ram_read_ins == 0b01000111:
+            #         key = int(self.ram_read(self.pc+1))
+            #         print(int(self.reg[key]))
+            #         self.pc += int(num_op) + 1
+            
                      
             # if inst_set is not int('1', 2):
             #     self.pc += int(num_op)
