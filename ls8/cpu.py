@@ -103,14 +103,17 @@ class CPU:
         value = self.ram_read(self.pc+2)
         self.reg[key] = value
     
-    def push(self, register):
-        key = int(self.ram_read(self.pc+1))
+    def push(self):
+        register = int(self.ram_read(self.pc+1))
+        value = self.reg[register]
         self.reg[7] -=1
-        self.ram_write(self.reg[7], key)
+        self.ram_write(self.reg[7], value)
         
 
-    def pop(self, register):
-        pass
+    def pop(self):
+        register = int(self.ram_read(self.pc+1))
+        self.reg[register] = self.ram[self.reg[7]]
+        self.reg[7] +=1
 
         
         
