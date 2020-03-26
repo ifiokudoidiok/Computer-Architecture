@@ -10,6 +10,7 @@ PUSH = 0b01000101
 POP = 0b01000110 
 CALL = 0b01010000
 RET  = 0b00010001
+ADD = 0b10100000
 
 class CPU:
     """Main CPU class."""
@@ -23,6 +24,7 @@ class CPU:
         self.ram = [0] * 256
         self.can_run = False
         self.branchtable = {
+            ADD: self.add,
             LDI: self.ldi,
             PRN: self.prn,
             HLT: self.hlt,
@@ -56,9 +58,10 @@ class CPU:
 
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
+        print(op)
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
-        if op == "MUL":
+        elif op == "MUL":
             self.reg[reg_a] *= self.reg[reg_b]
         #elif op == "SUB": etc
         else:
@@ -99,6 +102,9 @@ class CPU:
         self.can_run = False
         exit()
 
+    def add(self):
+        self.alu('ADD', self.ram_read(self.pc+1), self.ram_read(self.pc+2))
+
     def mul(self):
         self.alu('MUL', self.ram_read(self.pc+1), self.ram_read(self.pc+2))
     
@@ -121,21 +127,16 @@ class CPU:
 
     def call(self):
         register = int(self.ram_read(self.pc+1))
-        value = int(self.ram_read(self.pc+2))
+        value = self.pc + 2
         self.pc = self.reg[register]
         self.reg[7] -=1
         self.ram_write(self.reg[7], value)
-        
-        
-        
 
     def ret(self):
         self.pc = self.ram[self.reg[7]]
         self.reg[7] +=1
         pass
-
-        
-        
+   
 
     def run(self):
         """Run the CPU."""
