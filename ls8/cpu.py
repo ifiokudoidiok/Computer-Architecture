@@ -8,6 +8,8 @@ HLT = 0b00000001
 MUL = 0b10100010
 PUSH = 0b01000101 
 POP = 0b01000110 
+CALL = 0b01010000
+RET  = 0b00010001
 
 class CPU:
     """Main CPU class."""
@@ -27,6 +29,8 @@ class CPU:
             MUL: self.mul,
             PUSH: self.push,
             POP: self.pop,
+            CALL: self.call,
+            RET: self.ret
         }
         
 
@@ -114,6 +118,21 @@ class CPU:
         register = int(self.ram_read(self.pc+1))
         self.reg[register] = self.ram[self.reg[7]]
         self.reg[7] +=1
+
+    def call(self):
+        register = int(self.ram_read(self.pc+1))
+        value = int(self.ram_read(self.pc+2))
+        self.pc = self.reg[register]
+        self.reg[7] -=1
+        self.ram_write(self.reg[7], value)
+        
+        
+        
+
+    def ret(self):
+        self.pc = self.ram[self.reg[7]]
+        self.reg[7] +=1
+        pass
 
         
         
